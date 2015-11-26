@@ -44,3 +44,21 @@ t3 = gmapT
             fromJust (cast (if isUpper (head x) then "!" else x))
      )
      $ (Foo (Bar 'x' False) 33 "Bar")
+
+data L1 a = C1 a | OP2 (L1 a) (L1 a) | OP1 (L1 a)
+  deriving(Show, Data, Typeable)
+
+type XL1 = L1 String
+type XL2 = L1 Int
+
+ex1 = OP2 (OP1 (C1 "33")) (C1 "44")
+
+
+-- convert :: (String -> Int) -> XL1 -> XL2
+-- convert fn d = gfoldl
+
+t4 :: XL1
+t4 = gfoldl (\fdb d -> fdb d ) (\x -> x) ex1
+
+
+
