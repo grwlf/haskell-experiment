@@ -45,20 +45,38 @@ t3 = gmapT
      )
      $ (Foo (Bar 'x' False) 33 "Bar")
 
-data L1 a = C1 a | OP2 (L1 a) (L1 a) | OP1 (L1 a)
+data L1 a = C0 | C1 a | OP2 (L1 a) (L1 a) | OP1 (L1 a) | OP3 (L1 a) (L1 a) (L1 a) | C2 a a
   deriving(Show, Data, Typeable)
 
 type XL1 = L1 String
 type XL2 = L1 Int
 
-ex1 = OP2 (OP1 (C1 "33")) (C1 "44")
+ex1 = OP3 (OP1 (C1 "33")) (C2 "44" "55") C0
 
 
 -- convert :: (String -> Int) -> XL1 -> XL2
 -- convert fn d = gfoldl
 
+data ID x = ID { unID :: x }
+  deriving(Show)
+
 t4 :: XL1
-t4 = gfoldl (\fdb d -> fdb d ) (\x -> x) ex1
+t4 = unID $ gfoldl
+      (\fdb d ->
+        let
+          msg :: (Data x) => x -> String
+          msg x = ((show (toConstr x)) ++ " of " ++ (show (dataTypeOf x)))
+        in
+        trace (msg d) $
+        ID $
+        -- trace (" --> " ++ (msg $ (unID fdb) d)) $
+        (unID fdb) d
+      )
+      (\x ->
+        trace ("triv") $
+        ID x
+      )
+      ex1
 
 
 
