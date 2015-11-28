@@ -7,24 +7,20 @@ import Data.Aeson.Parser (json')
 import Data.Aeson.Lens (key, values, _String)
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
-import Pipes.Attoparsec (parse)
+import Pipes (for, runEffect, (>->))
+-- import Pipes.Attoparsec (parse)
 import Pipes.HTTP
+import Pipes.ByteString as BS
+import Pipes.Prelude as PP  (foldM)
+import Control.Monad
+import Control.Monad.Writer
 import Text.Show.Pretty
+import Data.ByteString.Char8 as BS
 
 main = do
     req <- parseUrl "http://www.reddit.com/r/haskell.json"
-    withManager defaultManagerSettings $ \m ->
-        withHTTP req m $ \resp -> do
-            json <- evalStateT (parse json') (responseBody resp)
+    m <- newManager defaultManagerSettings
+    withHTTP req m $ \resp -> do
+      b <- PP.foldM (\a b -> return $ BS.append a b) (return BS.empty) return (responseBody resp)
+      BS.putStrLn b
 
-            putStrLn (ppShow json)
-
-format :: T.Text -> T.Text
-format txt =
-    if   T.length txt <= columns
-    then T.concat [bullet,                txt          ]
-    else T.concat [bullet, T.take columns txt, ellipsis]
-  where
-    bullet   = "[*] "
-    ellipsis = "..."
-    columns = 60 - (T.length bullet + T.length ellipsis)
