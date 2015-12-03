@@ -4,7 +4,8 @@ data N = N [N] [N]
   deriving (Show)
 
 geq :: N -> N -> Bool
-geq (N [] []) (N [] []) = True
+-- Looks unnecessary
+-- geq (N [] []) (N [] []) = True
 geq x@(N xl xr) y@(N yl yr) = (not (any (y`geq`) xr)) && (not (any (`geq`x) yl))
 
 eq :: N -> N -> Bool
