@@ -7,25 +7,22 @@ import Control.Monad.Cont
 import Control.Monad.Trans
 
 
-data Result t m a =
+data Result t a =
     Fine a
-  | MFine (m a)
-  | EInt Int (Int -> t (Result t m a) m a)
-  | EBool Bool (Bool -> t (Result t m a) m a)
+  | EInt Int (Int -> t (Result t a) a)
+  | EBool Bool (Bool -> t (Result t a) a)
 
 
-newtype VKT r m a = VKT { unVK :: ContT r m a }
+newtype VKT m r a = VKT { unVK :: ContT r m a }
   deriving(Functor, Applicative, Monad, MonadCont, MonadIO)
 
-type Result2 m a = Result VKT m a
-
-liftCont :: ((a -> m r) -> m r) -> VKT r m a
+liftCont :: ((a -> m r) -> m r) -> VKT m r a
 liftCont f = VKT (ContT f)
 
 -- class MonadVK m m' where
 --   raiseError :: ((z -> VKT (Result VKT m x) m x) -> Result VKT m x) -> VKT (Result VKT m x) m z
 
-raiseError :: (Monad m) => ((z -> VKT (Result VKT m x) m x) -> Result VKT m x) -> VKT (Result VKT m x) m z
+raiseError :: (Monad m) => ((z -> VKT m (Result (VKT m) x) x) -> Result (VKT m) x) -> VKT m (Result (VKT m) x) z
 raiseError ctr = liftCont (\cont -> do
   return (ctr
 
