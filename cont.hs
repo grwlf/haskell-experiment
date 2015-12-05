@@ -19,8 +19,11 @@ newtype VKT m r a = VKT { unVK :: ContT r m a }
 liftCont :: ((a -> m r) -> m r) -> VKT m r a
 liftCont f = VKT (ContT f)
 
--- class MonadVK m m' where
---   raiseError :: ((z -> VKT (Result VKT m x) m x) -> Result VKT m x) -> VKT (Result VKT m x) m z
+class MonadVK m where
+  raiseError' :: ((z -> m (Result m x) x) -> Result m x) -> m (Result m x) z
+
+instance (Monad m) => MonadVK (VKT m) where
+  raiseError' = raiseError
 
 raiseError :: (Monad m) => ((z -> VKT m (Result (VKT m) x) x) -> Result (VKT m) x) -> VKT m (Result (VKT m) x) z
 raiseError ctr = liftCont (\cont -> do
