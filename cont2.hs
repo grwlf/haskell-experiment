@@ -15,16 +15,16 @@ data Result t a =
   | EInt (Int -> t (Result t a) (Result t a))
   | EBool (Bool -> t (Result t a) (Result t a))
 
-type Guts x m r a = ReaderT (r -> x m r r) (ContT r m) a
+type Guts x m r a = ReaderT (r -> x r r) (ContT r m) a
 
-newtype VKT m r a = VKT { unVKT :: Guts VKT m r a }
-  deriving(Functor, Applicative, Monad, MonadReader (r -> VKT m r r),  MonadCont, MonadIO)
+newtype VKT r a = VKT { unVKT :: Guts VKT IO r a }
+  deriving(Functor, Applicative, Monad, MonadReader (r -> VKT r r),  MonadCont, MonadIO)
 
 class (MonadCont m, MonadReader (r -> m r) m) => MonadVK m r
 
-instance MonadVK (VKT m r) r
+instance MonadVK (VKT r) r
 
-runVKT :: (Monad m) => VKT m r r -> m r
+runVKT :: VKT r r -> IO r
 runVKT m = runContT (runReaderT (unVKT (catch m)) undefined) return
 
 catch :: (MonadVK m r) => m r -> m r
@@ -37,7 +37,6 @@ raise z = callCC $ \k -> do
   err <- ask
   err (z k)
   undefined
-
 
 test1 :: IO ()
 test1 = do
